@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Band's Aid — create your musician or band profile.">
+  <title>Band's Aid — Create a Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="assets/data.js"></script>
+  <script src="assets/script.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+<body data-page="create">
+
+  <header class="site-header">
+    <a href="index.html" class="site-logo" aria-label="Band's Aid home">Band's Aid</a>
+    <nav class="site-nav" role="navigation" aria-label="Main navigation">
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navMenu" role="list">
+        <li><a href="index.html" data-nav="home">Discover</a></li>
+        <li><a href="profile.html" data-nav="profile">Browse</a></li>
+        <li><a href="create.html" data-nav="create" class="nav-cta">Join</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main x-data="createProfileApp()" id="app">
+
+    <div class="page-header">
+      <h1 class="page-title" x-text="hasProfile ? 'My Profile' : 'Create a Profile'"></h1>
+      <p class="page-sub">List yourself as a musician looking for a band, or as a band looking for members.</p>
+    </div>
+
+    <!-- Success state -->
+    <div class="create-success create-success--page" x-show="submitted" x-cloak>
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none" aria-hidden="true"><circle cx="26" cy="26" r="25" stroke="var(--color-accent)" stroke-width="1.5"/><path d="M15 26l9 9 13-18" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h2>Profile submitted!</h2>
+      <p>We'll be in touch. In the meantime, <a href="index.html">browse other listings</a>.</p>
+    </div>
+
+    <!-- Form -->
+    <form
+      class="create-form create-form--page"
+      @submit.prevent="submit()"
+      x-show="!submitted"
+      novalidate
+    >
+
+      <fieldset class="form-fieldset">
+        <legend class="form-legend">I am a…</legend>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="profileType" value="musician" x-model="type">
+            <span>Musician</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="profileType" value="band" x-model="type">
+            <span>Band</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="form-fieldset">
+        <legend class="sr-only">Basic info</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="p-name" class="form-label" x-text="type === 'band' ? 'Band name' : 'Your name'"></label>
+            <input id="p-name" type="text" class="form-input" x-model="name" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label class="form-label" x-text="type === 'band' ? 'Seeking (instruments)' : 'Instruments'"></label>
+            <div class="instr-dropdown" @click.away="instrumentPickerOpen = false">
+              <button
+                type="button"
+                class="filter-input filter-input--select"
+                @click="instrumentPickerOpen = !instrumentPickerOpen"
+                :aria-expanded="instrumentPickerOpen.toString()"
+                aria-haspopup="listbox"
+              >
+                <span class="instr-label-text" x-text="instrumentPickerLabel"></span>
+                <svg width="11" height="7" viewBox="0 0 11 7" fill="none" aria-hidden="true"><path d="M1 1l4.5 4.5L10 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </button>
+              <div class="genre-menu instr-menu" x-show="instrumentPickerOpen" x-transition role="listbox" aria-multiselectable="true">
+                <template x-for="instr in allInstruments" :key="instr">
+                  <button
+                    type="button"
+                    class="genre-option"
+                    :class="{ 'is-selected': instruments.includes(instr) }"
+                    @click="instruments.includes(instr) ? instruments.splice(instruments.indexOf(instr), 1) : instruments.push(instr)"
+                    role="option"
+                    :aria-selected="instruments.includes(instr).toString()"
+                    x-text="instr"
+                  ></button>
+                </template>
+                <button
+                  type="button"
+                  class="genre-option"
+                  :class="{ 'is-selected': instruments.includes('Other') }"
+                  @click="instruments.includes('Other') ? instruments.splice(instruments.indexOf('Other'), 1) : instruments.push('Other')"
+                  role="option"
+                  :aria-selected="instruments.includes('Other').toString()"
+                >Other…</button>
+                <div class="instr-other-wrap" x-show="instruments.includes('Other')" x-transition>
+                  <input
+                    type="text"
+                    class="form-input instr-other-input"
+                    placeholder="Describe your instrument…"
+                    x-model="instrumentOther"
+                    @click.stop
+                  >
+                </div>
+                <button type="button" class="genre-clear" x-show="instruments.length > 0" @click="instruments = []; instrumentOther = ''">Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="p-location" class="form-label">Location</label>
+          <input id="p-location" type="text" class="form-input" placeholder="City, State" x-model="location">
+        </div>
+      </fieldset>
+
+      <fieldset class="form-fieldset">
+        <legend class="form-legend">Genres</legend>
+        <div class="checkbox-group checkbox-group--wide">
+          <template x-for="genre in allGenres" :key="genre">
+            <label class="checkbox-label">
+              <input type="checkbox" :value="genre" x-model="genres">
+              <span x-text="genre"></span>
+            </label>
+          </template>
+        </div>
+      </fieldset>
+
+      <fieldset class="form-fieldset">
+        <legend class="form-legend">Preference</legend>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="p-pref" value="covers"    x-model="preference"> <span>Covers</span></label>
+          <label class="radio-label"><input type="radio" name="p-pref" value="originals" x-model="preference"> <span>Originals</span></label>
+          <label class="radio-label"><input type="radio" name="p-pref" value="mix"       x-model="preference"> <span>Mix of both</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="form-fieldset">
+        <legend class="sr-only">About you</legend>
+        <div class="form-group">
+          <label for="p-insp" class="form-label">Inspirations <span class="form-hint">(comma-separated)</span></label>
+          <input id="p-insp" type="text" class="form-input" placeholder="e.g. Fugazi, Unwound, Shellac" x-model="inspirations">
+        </div>
+        <div class="form-group">
+          <label for="p-bio" class="form-label">
+            Bio
+            <span class="form-hint" x-text="`${bio.length}/300`"></span>
+          </label>
+          <textarea id="p-bio" class="form-input form-textarea" rows="5" maxlength="300" placeholder="Tell bands or musicians what makes you the right fit…" x-model="bio"></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset class="form-fieldset">
+        <legend class="form-legend">Media <span class="form-hint">— coming soon</span></legend>
+        <p class="form-hint form-hint--block">Photo, video, and audio uploads will be available when the platform launches. For now, your profile will include a placeholder.</p>
+        <div class="media-upload-slots">
+          <div class="media-upload-slot" tabindex="-1" aria-disabled="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1" y="3" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/><circle cx="7" cy="8" r="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 13l4-3.5 3.5 3 3-2.5 7 4" stroke="currentColor" stroke-width="1.2"/></svg>
+            Photo
+          </div>
+          <div class="media-upload-slot" tabindex="-1" aria-disabled="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1" y="3" width="13" height="14" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M14 8l5-3v10l-5-3V8z" stroke="currentColor" stroke-width="1.2"/></svg>
+            Video
+          </div>
+          <div class="media-upload-slot" tabindex="-1" aria-disabled="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2v16M6 5v10M14 5v10M2 8v4M18 8v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Audio
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="form-submit-row">
+        <button type="submit" class="btn btn--accent btn--lg" x-text="hasProfile ? 'Save Changes' : 'Submit Profile'"></button>
+        <p class="form-hint">This is a proof of concept — no data is stored.</p>
+      </div>
+
+    </form>
+
+  </main>
+
+  <footer class="site-footer">
+    <p class="footer-text">Band's Aid</p>
+    <p class="footer-sub">Musician matchmaking — proof of concept</p>
+  </footer>
+
+</body>
+</html>
